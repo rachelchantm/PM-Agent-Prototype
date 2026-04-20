@@ -12,6 +12,10 @@ Built as a response to a real product management challenge: *how do you design a
 
 The answer implemented here is **Gated Autopilot** — automation runs ahead, humans decide whether to follow.
 
+## Workflow
+<img width="1895" height="514" alt="Project Development Workflow" src="https://github.com/user-attachments/assets/4de0a537-8dd7-4115-9e07-06cde203e011" />
+
+
 ---
 
 ## Features
