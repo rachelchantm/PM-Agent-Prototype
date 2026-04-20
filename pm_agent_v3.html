@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>PM Agent v3 — All-in-One with Human Checkpoints</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,300;400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0f0e0c;--ink2:#3a3832;--ink3:#7a7670;--ink4:#b8b4ad;
+  --paper:#f7f5f0;--paper2:#efecea;--paper3:#e5e2dc;--paper4:#d8d4cc;
+  --accent:#c85a2a;--accent2:#f0e8df;--accent3:#8a3a18;
+  --teal:#1a6b5a;--teal2:#d4ede8;--teal3:#0d3d32;
+  --gold:#b07d1a;--gold2:#faf0d4;--gold3:#7a5510;
+  --blue:#1a4a7a;--blue2:#dce8f5;
+  --red:#8a1a1a;--red2:#f5dcdc;
+  --font:'DM Sans',sans-serif;
+  --serif:'Fraunces',serif;
+  --mono:'DM Mono',monospace;
+  --r:6px;--r2:10px;--r3:14px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.05);
+  --shadow2:0 2px 8px rgba(0,0,0,.1),0 8px 24px rgba(0,0,0,.08);
+}
+
+html,body{height:100%;font-family:var(--font);background:var(--paper);color:var(--ink);font-size:13px;line-height:1.5}
+
+/* ── LAYOUT ── */
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.rail{width:220px;flex-shrink:0;background:var(--ink);display:flex;flex-direction:column;overflow:hidden}
+.rail-top{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.rail-logo{display:flex;align-items:center;gap:10px;margin-bottom:2px}
+.rail-gem{width:30px;height:30px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rail-gem svg{width:15px;height:15px;fill:white}
+.rail-name{font-family:var(--serif);font-size:15px;font-weight:500;color:#f7f5f0;letter-spacing:-.01em}
+.rail-ver{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.08em}
+.rail-body{flex:1;overflow-y:auto;padding:12px 10px}
+.rail-section{margin-bottom:4px}
+.rail-label{font-family:var(--mono);font-size:9px;font-weight:500;color:rgba(255,255,255,.25);letter-spacing:.1em;text-transform:uppercase;padding:8px 8px 4px}
+.rail-btn{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r2);cursor:pointer;font-size:12px;font-weight:400;color:rgba(255,255,255,.5);border:none;background:none;width:100%;text-align:left;transition:all .15s;position:relative}
+.rail-btn:hover{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8)}
+.rail-btn.active{background:rgba(200,90,42,.18);color:#f0d0c0;font-weight:500}
+.rail-btn svg{width:13px;height:13px;flex-shrink:0;opacity:.6}
+.rail-btn.active svg{opacity:1}
+.g-pip{position:absolute;right:10px;width:18px;height:18px;border-radius:50%;font-size:9px;font-weight:700;font-family:var(--mono);display:flex;align-items:center;justify-content:center}
+.g-pip.ok{background:rgba(26,107,90,.4);color:#4ecfb0}
+.g-pip.warn{background:rgba(176,125,26,.4);color:#f0c050}
+.g-pip.lock{background:rgba(138,26,26,.3);color:#e08080}
+.rail-foot{padding:12px 14px;border-top:1px solid rgba(255,255,255,.06)}
+.gate-summary{display:flex;flex-direction:column;gap:4px}
+.gs-row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px}
+.gs-key{color:rgba(255,255,255,.28)}
+.gs-val{font-weight:500}
+.gs-val.ok{color:#4ecfb0}
+.gs-val.warn{color:#f0c050}
+.gs-val.lock{color:#e08080}
+
+/* ── MAIN ── */
+.stage{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.bar{background:var(--paper);border-bottom:1px solid var(--paper3);padding:11px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;box-shadow:0 1px 0 var(--paper3)}
+.bar-title{font-family:var(--serif);font-size:16px;font-weight:500;color:var(--ink);flex:1;letter-spacing:-.02em}
+.tag{font-family:var(--mono);font-size:10px;font-weight:500;padding:3px 9px;border-radius:20px;white-space:nowrap;letter-spacing:.02em}
+.tag.ok{background:var(--teal2);color:var(--teal3)}
+.tag.warn{background:var(--gold2);color:var(--gold3)}
+.tag.lock{background:var(--red2);color:var(--red)}
+.tag.neutral{background:var(--paper3);color:var(--ink3)}
+.tag.accent{background:var(--accent2);color:var(--accent3)}
+.cbtn{padding:7px 14px;border-radius:var(--r);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--paper4);background:var(--paper);color:var(--ink2);transition:all .15s;font-family:var(--font)}
+.cbtn:hover{background:var(--paper2);border-color:var(--paper4)}
+.cbtn.primary{background:var(--accent);color:white;border-color:var(--accent)}
+.cbtn.primary:hover{background:var(--accent3)}
+.cbtn.ok{background:var(--teal2);color:var(--teal3);border-color:var(--teal2)}
+.cbtn.ok:hover{background:#c0e4de}
+.cbtn.warn{background:var(--gold2);color:var(--gold3);border-color:var(--gold2)}
+.cbtn.danger{background:var(--red2);color:var(--red);border-color:var(--red2)}
+.cbtn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+
+.view{display:none;flex:1;overflow:hidden;flex-direction:column}
+.view.on{display:flex}
+.canvas{overflow-y:auto;flex:1;padding:18px;display:flex;gap:16px}
+
+/* ── PANELS ── */
+.card{background:var(--paper);border:1px solid var(--paper3);border-radius:var(--r3);overflow:hidden;box-shadow:var(--shadow)}
+.ch{padding:12px 15px;border-bottom:1px solid var(--paper3);display:flex;align-items:center;gap:8px}
+.ch h3{font-family:var(--serif);font-size:13px;font-weight:500;color:var(--ink);flex:1;letter-spacing:-.01em}
+.ch span{font-family:var(--mono);font-size:10px;color:var(--ink4)}
+.cb{padding:14px}
+.lcol{width:290px;flex-shrink:0;display:flex;flex-direction:column;gap:14px}
+.rcol{flex:1;display:flex;flex-direction:column;gap:14px;min-width:0}
+
+/* ── GATE COMPONENT ── */
+.gate{border-radius:var(--r2);overflow:hidden;margin-bottom:14px;border:1.5px solid}
+.gate.ok{border-color:#1a6b5a;background:#f0faf7}
+.gate.warn{border-color:#b07d1a;background:#fdf8ec}
+.gate.lock{border-color:#c0bcb5;background:var(--paper2)}
+.gate.active{border-color:#c85a2a;background:#fdf3ee}
+.gate-head{padding:11px 14px;display:flex;align-items:center;gap:10px}
+.gate-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.gate-ico.ok{background:#d4ede8}
+.gate-ico.warn{background:#faf0d4}
+.gate-ico.lock{background:var(--paper3)}
+.gate-ico.active{background:#f5e0d4}
+.gate-ttl{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:1px;font-family:var(--font)}
+.gate-sub{font-family:var(--mono);font-size:10px}
+.gate-sub.ok{color:var(--teal)}
+.gate-sub.warn{color:var(--gold)}
+.gate-sub.lock{color:var(--ink4)}
+.gate-sub.active{color:var(--accent)}
+.gate-body{padding:0 14px 13px}
+.ck-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid rgba(0,0,0,.05);cursor:pointer;transition:background .1s}
+.ck-row:hover{background:rgba(0,0,0,.02)}
+.ck-row:last-of-type{border-bottom:none}
+.ck-box{width:17px;height:17px;border-radius:4px;border:1.5px solid var(--paper4);flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .18s;background:white}
+.ck-box.on{background:var(--teal);border-color:var(--teal)}
+.ck-box.on svg{display:block}
+.ck-box svg{display:none;width:9px;height:9px}
+.ck-text{flex:1}
+.ck-label{font-size:12px;color:var(--ink2);transition:color .15s}
+.ck-label.on{color:var(--ink);font-weight:500}
+.ck-hint{font-family:var(--mono);font-size:10px;color:var(--ink4);margin-top:1px}
+.gate-acts{display:flex;gap:8px;padding:10px 0 2px;border-top:1px solid rgba(0,0,0,.06)}
+.gate-foot{padding:8px 14px;border-top:1px solid rgba(0,0,0,.05);display:flex;align-items:center;gap:8px}
+.gate-bar-w{flex:1;height:3px;background:var(--paper3);border-radius:3px;overflow:hidden}
+.gate-bar-f{height:100%;border-radius:3px;transition:width .35s cubic-bezier(.4,0,.2,1)}
+.gate-pct{font-family:var(--mono);font-size:10px;color:var(--ink4)}
+
+/* ── PIPELINE VIZ ── */
+.pipe-flow{display:flex;align-items:center;gap:0;padding:4px 0;overflow-x:auto}
+.pf-stage{display:flex;flex-direction:column;align-items:center;flex:1;min-width:72px}
+.pf-node{width:34px;height:34px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-size:13px;margin-bottom:5px;transition:all .3s}
+.pf-node.done{border-color:var(--teal);background:var(--teal2);color:var(--teal)}
+.pf-node.active{border-color:var(--accent);background:var(--accent2);color:var(--accent);box-shadow:0 0 0 4px rgba(200,90,42,.12)}
+.pf-node.lock{border-color:var(--paper4);background:var(--paper2);color:var(--ink4)}
+.pf-node.pass{border-color:var(--gold);background:var(--gold2);color:var(--gold)}
+.pf-label{font-family:var(--mono);font-size:9px;color:var(--ink4);text-align:center;font-weight:500;letter-spacing:.04em}
+.pf-label.done{color:var(--teal)}
+.pf-label.active{color:var(--accent)}
+.pf-label.pass{color:var(--gold)}
+.pf-arrow{flex:0 0 20px;height:2px;position:relative;top:-10px}
+.pf-arrow.done{background:var(--teal)}
+.pf-arrow.lock{background:var(--paper4)}
+.pf-arrow.active{background:linear-gradient(90deg,var(--accent),var(--paper4));animation:flowpulse 1.8s infinite}
+@keyframes flowpulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── CHAT ── */
+.chat-msgs{overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:9px;flex:1;max-height:230px}
+.msg{display:flex;gap:8px;align-items:flex-start}
+.msg.u{flex-direction:row-reverse}
+.av{width:25px;height:25px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;font-family:var(--mono)}
+.av.ai{background:var(--accent2);color:var(--accent3)}
+.av.u{background:var(--paper3);color:var(--ink3)}
+.bbl{max-width:90%;padding:8px 11px;font-size:12px;line-height:1.6;border-radius:10px}
+.bbl.ai{background:var(--paper2);color:var(--ink);border-radius:2px 10px 10px 10px}
+.bbl.u{background:var(--accent);color:white;border-radius:10px 2px 10px 10px}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--ink4);animation:bns 1.2s infinite;display:inline-block}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes bns{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-4px)}}
+.cin{padding:10px 13px;border-top:1px solid var(--paper3);display:flex;gap:8px}
+.cin input{flex:1;padding:7px 10px;border-radius:var(--r);border:1px solid var(--paper4);background:var(--paper2);font-size:12px;color:var(--ink);outline:none;font-family:var(--font)}
+.cin input:focus{border-color:var(--accent);background:white}
+.send{width:30px;height:30px;border-radius:var(--r);background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.send:hover{background:var(--accent3)}
+
+/* ── TABS ── */
+.tab-row{display:flex;gap:0;border-bottom:1px solid var(--paper3);padding:0 14px;overflow-x:auto}
+.tab{padding:9px 11px;font-size:11px;font-weight:500;font-family:var(--mono);color:var(--ink4);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;white-space:nowrap}
+.tab:hover{color:var(--ink2)}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+.da{padding:15px;overflow-y:auto;flex:1}
+.doc-title{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--ink);border:none;background:none;width:100%;outline:none;margin-bottom:4px;letter-spacing:-.02em}
+.doc-meta{font-family:var(--mono);font-size:10px;color:var(--ink4);display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.doc-body{font-size:12px;line-height:1.8;color:var(--ink)}
+.doc-body h4{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 5px;border-bottom:1px solid var(--paper3);padding-bottom:3px}
+.doc-body h4:first-child{margin-top:0}
+.doc-body p,.doc-body li{color:var(--ink2);margin-bottom:5px}
+.doc-body ul{padding-left:16px}
+.ph-text{color:var(--ink4);font-style:italic;font-size:12px;font-family:var(--serif)}
+
+/* ── DORA & CI/CD ── */
+.stat-g{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.stat-c{background:var(--paper);border:1px solid var(--paper3);border-radius:var(--r2);padding:12px;box-shadow:var(--shadow)}
+.stat-l{font-family:var(--mono);font-size:9px;color:var(--ink4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.stat-v{font-family:var(--serif);font-size:22px;font-weight:400;color:var(--ink);line-height:1.1}
+.stat-s{font-family:var(--mono);font-size:9px;margin-top:2px}
+.dora-metric{padding:9px 0;border-bottom:1px solid var(--paper3)}
+.dora-metric:last-child{border-bottom:none}
+.dora-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.dora-name{font-size:11px;font-weight:500;color:var(--ink)}
+.dora-val{font-family:var(--mono);font-size:12px;font-weight:500}
+.dora-bw{height:3px;background:var(--paper3);border-radius:3px;overflow:hidden;margin-bottom:3px}
+.dora-bf{height:100%;border-radius:3px}
+.dora-sub{font-family:var(--mono);font-size:10px;color:var(--ink4)}
+.pipe-run{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--paper3)}
+.pipe-run:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.pipe-run-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.pipe-stages{display:flex;align-items:stretch;gap:0;border-radius:var(--r);overflow:hidden;border:1px solid var(--paper3)}
+.ps{flex:1;padding:6px 8px;font-family:var(--mono);font-size:10px;border-right:1px solid var(--paper3)}
+.ps:last-child{border-right:none}
+.ps-name{font-weight:500;margin-bottom:1px}
+.ps-dur{color:var(--ink4);font-size:9px}
+
+/* ── KANBAN ── */
+.kb-col{background:var(--paper2);border-radius:var(--r2);padding:10px;flex:1}
+.kb-col-head{font-family:var(--mono);font-size:9px;font-weight:500;color:var(--ink4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.kb-dot{width:6px;height:6px;border-radius:50%}
+.kc{background:white;border:1px solid var(--paper3);border-radius:var(--r);padding:9px;margin-bottom:6px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.kc.blocked{border-left:3px solid var(--red)}
+.kc.gated{border-left:3px solid var(--gold)}
+.kc.done{border-left:3px solid var(--teal)}
+.kc-title{font-size:11px;font-weight:500;color:var(--ink);margin-bottom:5px}
+.kc-meta{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.pill{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:20px;font-weight:500}
+
+/* ── QUICK ACTIONS ── */
+.qa{padding:8px 10px;border-radius:var(--r);border:1px solid var(--paper3);background:var(--paper2);font-size:11px;font-weight:400;color:var(--ink2);cursor:pointer;text-align:left;transition:all .15s;display:flex;align-items:center;gap:8px;width:100%;margin-bottom:5px;font-family:var(--font)}
+.qa:hover{border-color:var(--accent);background:var(--accent2);color:var(--accent3)}
+.qa-ic{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px}
+
+/* ── VELOCITY ── */
+.vel-row{margin-bottom:9px}
+.vel-top{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px}
+.vel-name{color:var(--ink2);font-weight:500}
+.vel-pct{font-family:var(--mono);font-size:10px;color:var(--ink3)}
+.vel-bw{height:3px;background:var(--paper3);border-radius:3px;overflow:hidden}
+.vel-bf{height:100%;border-radius:3px;transition:width .5s}
+
+/* ── MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(15,14,12,.4);backdrop-filter:blur(6px);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-bg.on{display:flex}
+.modal{background:var(--paper);border:1px solid var(--paper4);border-radius:var(--r3);width:500px;max-width:94vw;overflow:hidden;box-shadow:var(--shadow2);animation:mup .2s cubic-bezier(.4,0,.2,1)}
+@keyframes mup{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mh{padding:16px 18px;border-bottom:1px solid var(--paper3);display:flex;align-items:center;gap:10px}
+.mh-ico{font-size:20px}
+.mh-title{font-family:var(--serif);font-size:15px;font-weight:500;color:var(--ink);flex:1;letter-spacing:-.01em}
+.mb{padding:18px}
+.mf{padding:12px 18px;border-top:1px solid var(--paper3);display:flex;gap:8px;justify-content:flex-end}
+.m-field{margin-bottom:14px}
+.m-label{font-family:var(--mono);font-size:10px;color:var(--ink4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;font-weight:500}
+.m-input{width:100%;padding:8px 10px;border-radius:var(--r);border:1px solid var(--paper4);background:var(--paper2);color:var(--ink);font-size:12px;outline:none;font-family:var(--font)}
+.m-input:focus{border-color:var(--accent)}
+textarea.m-input{resize:vertical;min-height:80px;line-height:1.6}
+.m-notice{padding:10px 12px;border-radius:var(--r);font-size:11px;margin-top:12px;font-family:var(--mono)}
+.m-notice.warn{background:var(--gold2);color:var(--gold3);border:1px solid rgba(176,125,26,.2)}
+.m-notice.danger{background:var(--red2);color:var(--red);border:1px solid rgba(138,26,26,.15)}
+.m-notice.ok{background:var(--teal2);color:var(--teal3);border:1px solid rgba(26,107,90,.15)}
+
+/* ── NOTIF TOAST ── */
+#toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:var(--r2);font-size:12px;font-family:var(--mono);display:none;z-index:300;box-shadow:var(--shadow2);max-width:320px;animation:tin .2s ease}
+@keyframes tin{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* ── AUDIT LOG ── */
+.audit-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--paper3);font-size:11px}
+.audit-row:last-child{border-bottom:none}
+.audit-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.audit-main{flex:1}
+.audit-action{font-weight:500;color:var(--ink);margin-bottom:1px}
+.audit-meta{font-family:var(--mono);font-size:10px;color:var(--ink4)}
+
+/* ── AGENT VIEW ── */
+.ctx-chip{padding:6px 10px;border-radius:var(--r);background:var(--paper2);border:1px solid var(--paper3);font-size:11px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.ctx-key{color:var(--ink4);font-family:var(--mono);font-size:10px}
+
+/* ── LOCK SCREEN ── */
+.lock-screen{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;text-align:center;padding:40px}
+.lock-icon{font-size:40px;opacity:.4}
+.lock-title{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--ink2);letter-spacing:-.01em}
+.lock-sub{font-size:12px;color:var(--ink4);max-width:300px;line-height:1.7;font-family:var(--font)}
+
+/* ── PULSE ── */
+.pulse{animation:pu 2.4s infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--paper4);border-radius:4px}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg" onclick="closeMod(event)">
+  <div class="modal">
+    <div class="mh"><span class="mh-ico" id="m-ico"></span><div class="mh-title" id="m-title"></div><button class="cbtn" onclick="closeMod()" style="padding:4px 8px;font-size:11px;">✕</button></div>
+    <div class="mb" id="m-body"></div>
+    <div class="mf" id="m-foot"></div>
+  </div>
+</div>
+
+<div class="shell">
+
+<!-- RAIL -->
+<nav class="rail">
+  <div class="rail-top">
+    <div class="rail-logo">
+      <div class="rail-gem"><svg viewBox="0 0 16 16"><path d="M3 2h4v4H3zM9 2h4v4H9zM3 9h4v4H3zM9 9h4v4H9z"/></svg></div>
+      <div>
+        <div class="rail-name">PM Agent</div>
+        <div class="rail-ver">V3 · GATED AUTOPILOT</div>
+      </div>
+    </div>
+  </div>
+  <div class="rail-body">
+    <div class="rail-section">
+      <div class="rail-label">Build</div>
+      <button class="rail-btn active" onclick="sw('prd')" id="nb-prd">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v1H2zM2 5h8v1H2zM2 8h10v1H2zM2 11h6v1H2z"/></svg>PRD Builder
+        <span class="g-pip ok" id="gn-prd">✓</span>
+      </button>
+      <button class="rail-btn" onclick="sw('impl')" id="nb-impl">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 3h14v2H1zM1 8h14v2H1zM1 13h14v2H1z"/></svg>Implementation
+        <span class="g-pip warn" id="gn-impl">!</span>
+      </button>
+    </div>
+    <div class="rail-section">
+      <div class="rail-label">Track & Ship</div>
+      <button class="rail-btn" onclick="sw('sprint')" id="nb-sprint">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 2h4v4H1zM6 2h4v4H6zM11 2h4v4H11zM1 10h4v4H1zM6 10h4v4H6z"/></svg>Sprint Board
+        <span class="g-pip lock" id="gn-sprint">🔒</span>
+      </button>
+      <button class="rail-btn" onclick="sw('dora')" id="nb-dora">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M1 13l4-5 3 2 3-4 4 4" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>DORA & CI/CD
+        <span class="g-pip lock" id="gn-dora">🔒</span>
+      </button>
+      <button class="rail-btn" onclick="sw('audit')" id="nb-audit">
+        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v12H2z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5 8l2 2 4-4" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>Audit Log
+      </button>
+    </div>
+    <div class="rail-section">
+      <div class="rail-label">Intelligence</div>
+      <button class="rail-btn" onclick="sw('agent')" id="nb-agent">
+        <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="5" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 5v3l2 1" stroke="currentColor" stroke-width="1.2" fill="none"/></svg>PM Assistant
+      </button>
+    </div>
+  </div>
+  <div class="rail-foot">
+    <div style="font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.2);letter-spacing:.08em;margin-bottom:7px;text-transform:uppercase;">Gate Status</div>
+    <div class="gate-summary">
+      <div class="gs-row"><span class="gs-key">G1 · Spec</span><span class="gs-val ok" id="gs1">APPROVED</span></div>
+      <div class="gs-row"><span class="gs-key">G2 · Plan</span><span class="gs-val warn" id="gs2">PENDING</span></div>
+      <div class="gs-row"><span class="gs-key">G3 · MR</span><span class="gs-val lock" id="gs3">LOCKED</span></div>
+      <div class="gs-row" style="margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.06)"><span class="gs-key">Code in pipeline</span><span class="gs-val lock" id="gs-code">NO</span></div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN STAGE -->
+<div class="stage">
+
+  <!-- ══ PRD VIEW ══ -->
+  <div class="view on" id="v-prd">
+    <div class="bar">
+      <div class="bar-title">PRD Builder</div>
+      <span class="tag ok">Gate 1 — APPROVED</span>
+      <button class="cbtn" onclick="genPRD()">Generate PRD</button>
+      <button class="cbtn primary" onclick="goImpl()">Proceed to Implementation ↗</button>
+    </div>
+    <div class="canvas">
+      <div class="lcol">
+        <div class="card" style="display:flex;flex-direction:column;">
+          <div class="ch"><div style="width:7px;height:7px;border-radius:50%;background:var(--teal);" class="pulse"></div><h3>PRD Agent</h3><span>Gate 1 clear</span></div>
+          <div class="chat-msgs" id="chat-prd">
+            <div class="msg"><div class="av ai">AI</div><div class="bbl ai">PRD Agent ready. Gate 1 is approved — your spec has been validated. Describe any feature to generate or refine, then proceed to implementation planning.</div></div>
+          </div>
+          <div class="cin"><input id="in-prd" placeholder="Describe your feature..." onkeydown="if(event.key==='Enter')sendChat('prd')"/><button class="send" onclick="sendChat('prd')"><svg width="11" height="11" viewBox="0 0 16 16" fill="white"><path d="M1 8L15 1l-4 7 4 7z"/></svg></button></div>
+        </div>
+
+        <!-- GATE 1 — APPROVED -->
+        <div class="gate ok">
+          <div class="gate-head">
+            <div class="gate-ico ok">✅</div>
+            <div><div class="gate-ttl">Gate 1 — Spec Validation</div><div class="gate-sub ok">APPROVED · Apr 17 · 09:42 · PM</div></div>
+          </div>
+          <div class="gate-body">
+            <div class="ck-row"><div class="ck-box on"><svg viewBox="0 0 9 9" fill="none"><path d="M1 4.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.5"/></svg></div><div class="ck-text"><div class="ck-label on">Acceptance criteria defined</div><div class="ck-hint">4 criteria · all measurable</div></div></div>
+            <div class="ck-row"><div class="ck-box on"><svg viewBox="0 0 9 9" fill="none"><path d="M1 4.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.5"/></svg></div><div class="ck-text"><div class="ck-label on">API surface documented</div><div class="ck-hint">3 endpoints · auth scoped</div></div></div>
+            <div class="ck-row"><div class="ck-box on"><svg viewBox="0 0 9 9" fill="none"><path d="M1 4.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.5"/></svg></div><div class="ck-text"><div class="ck-label on">Security requirements noted</div><div class="ck-hint">Enterprise boundary confirmed</div></div></div>
+            <div class="ck-row"><div class="ck-box on"><svg viewBox="0 0 9 9" fill="none"><path d="M1 4.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.5"/></svg></div><div class="ck-text"><div class="ck-label on">Edge cases documented</div><div class="ck-hint">6 cases · 2 flagged for eng</div></div></div>
+          </div>
+          <div class="gate-foot">
+            <div style="width:8px;height:8px;border-radius:50%;background:var(--teal)"></div>
+            <div class="gate-bar-w"><div class="gate-bar-f" style="width:100%;background:var(--teal)"></div></div>
+            <div class="gate-pct" style="color:var(--teal)">4/4 · APPROVED</div>
+          </div>
+        </div>
+
+        <!-- QUICK ACTIONS -->
+        <div class="card">
+          <div class="ch"><h3>Quick generation</h3></div>
+          <div class="cb">
+            <button class="qa" onclick="qa('stories')"><div class="qa-ic" style="background:var(--accent2)">👤</div>Generate user stories</button>
+            <button class="qa" onclick="qa('metrics')"><div class="qa-ic" style="background:var(--teal2)">📊</div>Define success metrics</button>
+            <button class="qa" onclick="qa('risks')"><div class="qa-ic" style="background:var(--gold2)">⚠️</div>Identify risks</button>
+            <button class="qa" onclick="qa('timeline')"><div class="qa-ic" style="background:var(--blue2)">📅</div>Suggest timeline</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="rcol">
+        <div class="card" style="flex:1;display:flex;flex-direction:column;">
+          <div class="tab-row">
+            <div class="tab on" onclick="stab(this,'t-ov')">Overview</div>
+            <div class="tab" onclick="stab(this,'t-req')">Requirements</div>
+            <div class="tab" onclick="stab(this,'t-us')">User Stories</div>
+            <div class="tab" onclick="stab(this,'t-mx')">Metrics</div>
+          </div>
+          <div id="t-ov" class="da" style="display:block">
+            <input class="doc-title" id="prd-title" value="PDF Export — Enterprise PRD"/>
+            <div class="doc-meta"><span>OWNER: PM</span><span>STATUS: APPROVED</span><span>v1.3</span><span>GATE 1 PASSED</span></div>
+            <div class="doc-body" id="b-ov">
+              <h4>Problem Statement</h4>
+              <p>Enterprise users need to share dashboard data externally. Screenshots are off-brand and error-prone. PDF export eliminates this friction and is a blocker for 3 stalled enterprise deals.</p>
+              <h4>Target Users</h4>
+              <p>Enterprise PMs and analysts sharing reports with external stakeholders. 10K+ potential users across current enterprise accounts.</p>
+              <h4>Strategic Goals</h4>
+              <ul><li>Reduce enterprise churn risk from missing export capability</li><li>Unblock 3 Q1 pipeline deals</li><li>Establish foundation for multi-format export roadmap (CSV, PPT)</li></ul>
+            </div>
+          </div>
+          <div id="t-req" class="da" style="display:none"><div class="doc-body" id="b-req"><div class="ph-text">Generate PRD to populate requirements.</div></div></div>
+          <div id="t-us" class="da" style="display:none"><div class="doc-body" id="b-us"><div class="ph-text">Generate PRD to populate user stories.</div></div></div>
+          <div id="t-mx" class="da" style="display:none"><div class="doc-body" id="b-mx"><div class="ph-text">Generate PRD to populate success metrics.</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ IMPLEMENTATION VIEW ══ -->
+  <div class="view" id="v-impl">
+    <div class="bar">
+      <div class="bar-title">Implementation Plan</div>
+      <span class="tag warn" id="g2-chip">Gate 2 — PENDING APPROVAL</span>
+      <button class="cbtn" onclick="genImpl()">Generate Plan</button>
+      <button class="cbtn primary" id="btn-g2" onclick="openApproveMod()" disabled>Approve Plan ↗</button>
+    </div>
+    <div class="canvas" style="flex-direction:column;gap:14px;">
+
+      <!-- PIPELINE FLOW -->
+      <div class="card">
+        <div class="ch"><h3>Workflow pipeline</h3><span id="flow-txt">Gate 2 pending approval</span></div>
+        <div class="cb" style="padding-bottom:8px;">
+          <div class="pipe-flow" id="pipe-flow">
+            <div class="pf-stage"><div class="pf-node done">✓</div><div class="pf-label done">PRD</div></div>
+            <div class="pf-arrow done"></div>
+            <div class="pf-stage"><div class="pf-node done">✓</div><div class="pf-label done">GATE·1</div></div>
+            <div class="pf-arrow active"></div>
+            <div class="pf-stage"><div class="pf-node active">⚙</div><div class="pf-label active">PLAN</div></div>
+            <div class="pf-arrow lock"></div>
+            <div class="pf-stage"><div class="pf-node lock">🔒</div><div class="pf-label">GATE·2</div></div>
+            <div class="pf-arrow lock"></div>
+            <div class="pf-stage"><div class="pf-node lock">🔒</div><div class="pf-label">CODE</div></div>
+            <div class="pf-arrow lock"></div>
+            <div class="pf-stage"><div class="pf-node lock">🔒</div><div class="pf-label">GATE·3</div></div>
+            <div class="pf-arrow lock"></div>
+            <div class="pf-stage"><div class="pf-node lock">🔒</div><div class="pf-label">REVIEW</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:14px;flex:1;">
+        <div class="rcol">
+          <!-- GATE 2 -->
+          <div class="gate active" id="gate2">
+            <div class="gate-head">
+              <div class="gate-ico active" id="g2-ico">⚠️</div>
+              <div>
+                <div class="gate-ttl">🔒 Gate 2 — Implementation Plan Approval</div>
+                <div class="gate-sub active" id="g2-sub">PENDING · Review all items before approval unlocks</div>
+              </div>
+            </div>
+            <div class="gate-body">
+              <div class="ck-row" onclick="ck2('a',this)"><div class="ck-box" id="ck2a"><svg viewBox="0 0 9 9" fill="none"><path d="M1 4.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.5"/></svg></div><div class="ck-text"><div class="ck-label" id="cl2a">Spec validated against approved PRD</div><div class="ck-hint">Confirm plan reflects Gate 1 spec exactly</div></div></div>
+              <div class="ck-row" onclick="ck2('b',this)"><div class="ck-box" id="ck2b"><svg viewBox="0 0 9 9" fill="none"><path d="M1 4.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.5"/></svg></div><div class="ck-text"><div class="ck-label" id="cl2b">Architecture reviewed by engineer</div><div class="ck-hint">Component breakdown, service boundaries, data model</div></div></div>
+              <div class="ck-row" onclick="ck2('c',this)"><div class="ck-box" id="ck2c"><svg viewBox="0 0 9 9" fill="none"><path d="M1 4.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.5"/></svg></div><div class="ck-text"><div class="ck-label" id="cl2c">Dependencies confirmed (no hallucinated libs)</div><div class="ck-hint">All libraries verified against internal registry</div></div></div>
+              <div class="ck-row" onclick="ck2('d',this)"><div class="ck-box" id="ck2d"><svg viewBox="0 0 9 9" fill="none"><path d="M1 4.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.5"/></svg></div><div class="ck-text"><div class="ck-label" id="cl2d">Security constraints applied</div><div class="ck-hint">No source code to external AI · audit log scoped</div></div></div>
+              <div class="ck-row" onclick="ck2('e',this)"><div class="ck-box" id="ck2e"><svg viewBox="0 0 9 9" fill="none"><path d="M1 4.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.5"/></svg></div><div class="ck-text"><div class="ck-label" id="cl2e">No autonomous architectural decisions</div><div class="ck-hint">All arch choices are flagged — none auto-resolved</div></div></div>
+              <div class="gate-acts">
+                <button class="cbtn ok" id="g2-approve-btn" onclick="openApproveMod()" disabled style="opacity:.4">Approve Plan</button>
+                <button class="cbtn warn" onclick="openChangesMod()">Request Changes</button>
+                <button class="cbtn danger" onclick="openRejectMod()">Reject & Halt</button>
+              </div>
+            </div>
+            <div class="gate-foot">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--gold)" id="g2-dot"></div>
+              <div class="gate-bar-w"><div class="gate-bar-f" style="width:0%;background:var(--gold)" id="g2-prog"></div></div>
+              <div class="gate-pct" id="g2-pct" style="color:var(--gold)">0 / 5 items checked</div>
+            </div>
+          </div>
+
+          <!-- PLAN CONTENT -->
+          <div class="card" style="flex:1;">
+            <div class="ch"><h3>AI-generated implementation plan</h3><span id="plan-status">Awaiting generation</span></div>
+            <div class="cb" id="plan-body"><div class="ph-text">Click "Generate Plan" above. The AI will produce a 3-sprint breakdown. Review each checkpoint in Gate 2 before approving.</div></div>
+          </div>
+        </div>
+
+        <div class="lcol">
+          <div class="card" style="display:flex;flex-direction:column;">
+            <div class="ch"><div style="width:7px;height:7px;border-radius:50%;background:var(--gold);" class="pulse"></div><h3>Implementation Agent</h3></div>
+            <div class="chat-msgs" id="chat-impl">
+              <div class="msg"><div class="av ai">AI</div><div class="bbl ai">Ready to generate a 3-sprint plan. All architectural decisions will be flagged — I won't resolve them. You must check all 5 items in Gate 2 before approval unlocks.</div></div>
+            </div>
+            <div class="cin"><input id="in-impl" placeholder="Adjust the plan..." onkeydown="if(event.key==='Enter')sendChat('impl')"/><button class="send" onclick="sendChat('impl')"><svg width="11" height="11" viewBox="0 0 16 16" fill="white"><path d="M1 8L15 1l-4 7 4 7z"/></svg></button></div>
+          </div>
+
+          <div class="card">
+            <div class="ch"><h3>Gate 2 progress</h3><span id="g2-count">0 / 5</span></div>
+            <div class="cb" style="font-size:11px;color:var(--ink4);line-height:1.7;">Tick each item after reviewing that section of the plan. <strong style="color:var(--ink2);">All 5 required</strong> before the Approve button unlocks.</div>
+          </div>
+
+          <div class="card">
+            <div class="ch"><h3>What happens next</h3></div>
+            <div class="cb" style="display:flex;flex-direction:column;gap:8px;">
+              <div style="padding:9px 10px;border-radius:var(--r);background:var(--teal2);border:1px solid rgba(26,107,90,.15);">
+                <div style="font-family:var(--mono);font-size:9px;color:var(--teal);font-weight:500;margin-bottom:3px;">ON APPROVE</div>
+                <div style="font-size:11px;color:var(--ink2);">Code generation starts. Branch created. Draft MR opened — held at Gate 3 until you promote it.</div>
+              </div>
+              <div style="padding:9px 10px;border-radius:var(--r);background:var(--red2);border:1px solid rgba(138,26,26,.1);">
+                <div style="font-family:var(--mono);font-size:9px;color:var(--red);font-weight:500;margin-bottom:3px;">ON REJECT</div>
+                <div style="font-size:11px;color:var(--ink2);">Full stop. Agent halted. Restart requires PRD revision and a new Gate 1 review.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SPRINT BOARD VIEW ══ -->
+  <div class="view" id="v-sprint">
+    <div class="bar">
+      <div class="bar-title">Sprint Board</div>
+      <span class="tag lock" id="g3-chip">Gate 3 — LOCKED</span>
+      <button class="cbtn" onclick="autoRemind()">Auto-remind team</button>
+      <button class="cbtn primary" id="btn-g3" onclick="openPromoteMod()" disabled>Promote Draft MR ↗</button>
+    </div>
+    <div class="canvas" style="flex-direction:column;gap:14px;">
+
+      <!-- GATE 3 -->
+      <div class="gate lock" id="gate3">
+        <div class="gate-head">
+          <div class="gate-ico lock" id="g3-ico">🔒</div>
+          <div>
+            <div class="gate-ttl">🔒 Gate 3 — Draft MR Promotion</div>
+            <div class="gate-sub lock" id="g3-sub">LOCKED · Complete Gate 2 to unlock this stage</div>
+          </div>
+        </div>
+        <div class="gate-body" id="g3-body" style="opacity:.45;pointer-events:none;">
+          <div class="ck-row"><div class="ck-box" id="ck3a"><svg viewBox="0 0 9 9" fill="none"><path d="M1 4.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.5"/></svg></div><div class="ck-text"><div class="ck-label">Gate 2 implementation plan approved</div><div class="ck-hint">Prerequisite — must be complete first</div></div></div>
+          <div class="ck-row"><div class="ck-box" id="ck3b"><svg viewBox="0 0 9 9" fill="none"><path d="M1 4.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.5"/></svg></div><div class="ck-text"><div class="ck-label">Engineer has reviewed the full diff</div><div class="ck-hint">Read all AI-generated code in the draft MR</div></div></div>
+          <div class="ck-row"><div class="ck-box" id="ck3c"><svg viewBox="0 0 9 9" fill="none"><path d="M1 4.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.5"/></svg></div><div class="ck-text"><div class="ck-label">Unit tests pass in CI (green)</div><div class="ck-hint">All AI-generated tests must be green</div></div></div>
+          <div class="ck-row"><div class="ck-box" id="ck3d"><svg viewBox="0 0 9 9" fill="none"><path d="M1 4.5l2.5 2.5 4.5-5" stroke="white" stroke-width="1.5"/></svg></div><div class="ck-text"><div class="ck-label">Security scan clear — zero findings</div><div class="ck-hint">No secrets, credentials, or PII in generated code</div></div></div>
+          <div class="gate-acts" id="g3-acts">
+            <button class="cbtn ok" id="g3-promote-btn" onclick="openPromoteMod()" disabled>Promote to Review</button>
+            <button class="cbtn warn" onclick="openChangesMod()">Request Changes</button>
+            <button class="cbtn danger" onclick="openRejectMod()">Discard MR</button>
+          </div>
+        </div>
+        <div class="gate-foot">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--ink4)"></div>
+          <div class="gate-bar-w"><div class="gate-bar-f" style="width:0%" id="g3-prog"></div></div>
+          <div class="gate-pct" id="g3-pct">LOCKED — approve Gate 2 first</div>
+        </div>
+      </div>
+
+      <!-- STATS + KANBAN -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+        <div class="stat-c"><div class="stat-l">Total tasks</div><div class="stat-v">18</div></div>
+        <div class="stat-c"><div class="stat-l">Completed</div><div class="stat-v" style="color:var(--teal)">11</div></div>
+        <div class="stat-c"><div class="stat-l">In progress</div><div class="stat-v" style="color:var(--gold)">4</div></div>
+        <div class="stat-c"><div class="stat-l">Overdue</div><div class="stat-v" style="color:var(--red)">3</div></div>
+      </div>
+
+      <div style="display:flex;gap:14px;flex:1;">
+        <div class="card" style="flex:1;">
+          <div class="ch"><h3>Sprint 12 · Apr 1–14</h3><span>Kanban board</span></div>
+          <div class="cb" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            <div class="kb-col">
+              <div class="kb-col-head"><div class="kb-dot" style="background:var(--accent)"></div>To Do</div>
+              <div class="kc blocked"><div class="kc-title">Define PDF template schema</div><div class="kc-meta"><span class="pill" style="background:var(--red2);color:var(--red)">BLOCKED</span><span class="pill" style="background:var(--paper3);color:var(--ink3)">AM</span></div></div>
+              <div class="kc blocked"><div class="kc-title">Finalize design mocks</div><div class="kc-meta"><span class="pill" style="background:var(--red2);color:var(--red)">OVERDUE</span><span class="pill" style="background:var(--paper3);color:var(--ink3)">RL</span></div></div>
+            </div>
+            <div class="kb-col">
+              <div class="kb-col-head"><div class="kb-dot" style="background:var(--gold)"></div>In Progress</div>
+              <div class="kc gated"><div class="kc-title">Build PDF renderer service</div><div class="kc-meta"><span class="pill" style="background:var(--gold2);color:var(--gold3)">IN PROG</span><span class="pill" style="background:var(--paper3);color:var(--ink3)">JK</span></div></div>
+              <div class="kc gated"><div class="kc-title">Write unit tests for export</div><div class="kc-meta"><span class="pill" style="background:var(--gold2);color:var(--gold3)">IN PROG</span><span class="pill" style="background:var(--paper3);color:var(--ink3)">JK</span></div></div>
+            </div>
+            <div class="kb-col">
+              <div class="kb-col-head"><div class="kb-dot" style="background:var(--teal)"></div>Done</div>
+              <div class="kc done"><div class="kc-title">PRD approved by stakeholders</div><div class="kc-meta"><span class="pill" style="background:var(--teal2);color:var(--teal3)">DONE</span><span class="pill" style="background:var(--paper3);color:var(--ink3)">PM</span></div></div>
+              <div class="kc done"><div class="kc-title">Tech spec review complete</div><div class="kc-meta"><span class="pill" style="background:var(--teal2);color:var(--teal3)">DONE</span><span class="pill" style="background:var(--paper3);color:var(--ink3)">JK</span></div></div>
+              <div class="kc done"><div class="kc-title">DB schema migration</div><div class="kc-meta"><span class="pill" style="background:var(--teal2);color:var(--teal3)">DONE</span><span class="pill" style="background:var(--paper3);color:var(--ink3)">AM</span></div></div>
+            </div>
+          </div>
+        </div>
+        <div style="width:210px;flex-shrink:0;display:flex;flex-direction:column;gap:12px;">
+          <div class="card">
+            <div class="ch"><h3>Team velocity</h3></div>
+            <div class="cb">
+              <div class="vel-row"><div class="vel-top"><span class="vel-name">Jake Kim</span><span class="vel-pct">85%</span></div><div class="vel-bw"><div class="vel-bf" style="width:85%;background:var(--accent)"></div></div></div>
+              <div class="vel-row"><div class="vel-top"><span class="vel-name">Rosa Lin</span><span class="vel-pct">60%</span></div><div class="vel-bw"><div class="vel-bf" style="width:60%;background:var(--gold)"></div></div></div>
+              <div class="vel-row" style="margin-bottom:0"><div class="vel-top"><span class="vel-name">Alex Morgan</span><span class="vel-pct">40%</span></div><div class="vel-bw"><div class="vel-bf" style="width:40%;background:var(--red)"></div></div></div>
+            </div>
+          </div>
+          <div class="card" id="remind-panel" style="display:none;">
+            <div class="ch"><h3>Reminders sent</h3></div>
+            <div class="cb" id="remind-log" style="display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DORA VIEW ══ -->
+  <div class="view" id="v-dora">
+    <div class="bar">
+      <div class="bar-title">DORA Metrics & CI/CD</div>
+      <span class="tag lock" id="dora-tag">🔒 Locked — Gate 3 required</span>
+      <button class="cbtn" id="dora-refresh" onclick="toast('Pipeline refreshed.')" style="display:none">Refresh</button>
+    </div>
+    <div id="dora-lock" class="lock-screen">
+      <div class="lock-icon">📊</div>
+      <div class="lock-title">DORA Dashboard Locked</div>
+      <div class="lock-sub">No code has entered the pipeline yet. This dashboard unlocks once Gate 2 and Gate 3 are approved and the draft MR is promoted to review.</div>
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <div style="padding:9px 14px;border-radius:var(--r);background:var(--gold2);border:1px solid rgba(176,125,26,.2);text-align:center;"><div style="font-family:var(--mono);font-size:9px;color:var(--gold);margin-bottom:2px;">GATE 2</div><div style="font-size:11px;color:var(--ink3)">Pending</div></div>
+        <div style="padding:9px 14px;border-radius:var(--r);background:var(--red2);border:1px solid rgba(138,26,26,.1);text-align:center;"><div style="font-family:var(--mono);font-size:9px;color:var(--red);margin-bottom:2px;">GATE 3</div><div style="font-size:11px;color:var(--ink3)">Locked</div></div>
+      </div>
+      <button class="cbtn primary" onclick="sw('impl')">Go to Implementation Plan →</button>
+    </div>
+    <div id="dora-content" style="display:none;flex:1;overflow-y:auto;padding:18px;flex-direction:column;gap:14px;">
+      <div class="stat-g">
+        <div class="stat-c"><div class="stat-l">Deploy frequency</div><div class="stat-v" style="color:var(--teal)">4.2/day</div><div class="stat-s" style="color:var(--teal)">ELITE</div></div>
+        <div class="stat-c"><div class="stat-l">Lead time</div><div class="stat-v">1.8h</div><div class="stat-s" style="color:var(--teal)">ELITE</div></div>
+        <div class="stat-c"><div class="stat-l">Change fail rate</div><div class="stat-v" style="color:var(--gold)">4.2%</div><div class="stat-s" style="color:var(--gold)">MEDIUM</div></div>
+        <div class="stat-c"><div class="stat-l">Time to restore</div><div class="stat-v">23m</div><div class="stat-s" style="color:var(--teal)">ELITE</div></div>
+      </div>
+      <div style="display:flex;gap:14px;">
+        <div class="card" style="flex:1;">
+          <div class="ch"><h3>CI/CD pipeline — AI-generated MR #2841</h3><span style="color:var(--teal)">● All stages passing</span></div>
+          <div class="cb">
+            <div class="pipe-run">
+              <div class="pipe-run-head">
+                <span style="font-family:var(--mono);font-size:11px;font-weight:500;color:var(--ink)">#2841</span>
+                <span class="tag ok">passed</span>
+                <span style="font-family:var(--mono);font-size:10px;color:var(--ink4)">main · AI-generated · Jake Kim</span>
+                <span style="flex:1"></span>
+                <span style="font-family:var(--mono);font-size:10px;color:var(--ink4)">2m ago</span>
+              </div>
+              <div class="pipe-stages">
+                <div class="ps" style="background:rgba(26,107,90,.06)"><div class="ps-name" style="color:var(--teal)">Build</div><div class="ps-dur">1m 12s</div></div>
+                <div class="ps" style="background:rgba(26,107,90,.06)"><div class="ps-name" style="color:var(--teal)">Test</div><div class="ps-dur">3m 44s</div></div>
+                <div class="ps" style="background:rgba(26,107,90,.06)"><div class="ps-name" style="color:var(--teal)">SAST</div><div class="ps-dur">2m 11s</div></div>
+                <div class="ps" style="background:rgba(26,107,90,.06)"><div class="ps-name" style="color:var(--teal)">Staging</div><div class="ps-dur">1m 58s</div></div>
+                <div class="ps" style="background:rgba(26,107,90,.06)"><div class="ps-name" style="color:var(--teal)">Deploy</div><div class="ps-dur">0m 47s</div></div>
+              </div>
+            </div>
+            <div class="pipe-run">
+              <div class="pipe-run-head">
+                <span style="font-family:var(--mono);font-size:11px;font-weight:500;color:var(--ink)">#2839</span>
+                <span class="tag lock">failed</span>
+                <span style="font-family:var(--mono);font-size:10px;color:var(--ink4)">feat/design-mocks · Rosa Lin</span>
+                <span style="flex:1"></span>
+                <span style="font-family:var(--mono);font-size:10px;color:var(--ink4)">3h ago</span>
+              </div>
+              <div class="pipe-stages">
+                <div class="ps" style="background:rgba(26,107,90,.06)"><div class="ps-name" style="color:var(--teal)">Build</div><div class="ps-dur">1m 14s</div></div>
+                <div class="ps" style="background:rgba(138,26,26,.06)"><div class="ps-name" style="color:var(--red)">Test</div><div class="ps-dur">2m 38s ✗</div></div>
+                <div class="ps"><div class="ps-name" style="color:var(--ink4)">SAST</div><div class="ps-dur">—</div></div>
+                <div class="ps"><div class="ps-name" style="color:var(--ink4)">Staging</div><div class="ps-dur">—</div></div>
+                <div class="ps"><div class="ps-name" style="color:var(--ink4)">Deploy</div><div class="ps-dur">—</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="width:230px;flex-shrink:0;">
+          <div class="card">
+            <div class="ch"><h3>DORA breakdown</h3></div>
+            <div class="cb">
+              <div class="dora-metric"><div class="dora-top"><span class="dora-name">Deploy frequency</span><span class="dora-val" style="color:var(--teal)">4.2/day</span></div><div class="dora-bw"><div class="dora-bf" style="width:95%;background:var(--teal)"></div></div><div class="dora-sub">Multiple deploys per day · Elite tier</div></div>
+              <div class="dora-metric"><div class="dora-top"><span class="dora-name">Lead time</span><span class="dora-val" style="color:var(--teal)">1.8h</span></div><div class="dora-bw"><div class="dora-bf" style="width:90%;background:var(--teal)"></div></div><div class="dora-sub">Less than 1 day · Elite tier</div></div>
+              <div class="dora-metric"><div class="dora-top"><span class="dora-name">Change failure rate</span><span class="dora-val" style="color:var(--gold)">4.2%</span></div><div class="dora-bw"><div class="dora-bf" style="width:42%;background:var(--gold)"></div></div><div class="dora-sub">Target &lt;1% · Medium · needs work</div></div>
+              <div class="dora-metric"><div class="dora-top"><span class="dora-name">Time to restore</span><span class="dora-val" style="color:var(--teal)">23m</span></div><div class="dora-bw"><div class="dora-bf" style="width:88%;background:var(--teal)"></div></div><div class="dora-sub">Less than 1 hour · Elite tier</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><h3>Gate audit trail</h3><span style="color:var(--teal)">All 3 gates passed</span></div>
+        <div class="cb" id="audit-trail-dora">
+          <div class="audit-row"><div class="audit-dot" style="background:var(--teal)"></div><div class="audit-main"><div class="audit-action">Gate 1 approved — Spec Validation</div><div class="audit-meta">Apr 17 · 09:42 · Product Manager · 4/4 checks</div></div></div>
+          <div class="audit-row"><div class="audit-dot" style="background:var(--teal)"></div><div class="audit-main"><div class="audit-action">Gate 2 approved — Implementation Plan</div><div class="audit-meta">Apr 17 · 11:15 · Product Manager · 5/5 checks</div></div></div>
+          <div class="audit-row"><div class="audit-dot" style="background:var(--teal)"></div><div class="audit-main"><div class="audit-action">Gate 3 approved — Draft MR promoted to review</div><div class="audit-meta">Apr 17 · 14:03 · Product Manager · @jake.kim assigned</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ AUDIT LOG VIEW ══ -->
+  <div class="view" id="v-audit">
+    <div class="bar">
+      <div class="bar-title">Audit Log</div>
+      <span class="tag neutral">Full gate history</span>
+      <button class="cbtn" onclick="toast('Audit log exported.')">Export</button>
+    </div>
+    <div class="canvas" style="flex-direction:column;">
+      <div class="card" style="flex:1;">
+        <div class="ch"><h3>All gate decisions & agent actions</h3><span id="audit-count">4 events</span></div>
+        <div class="cb" id="audit-log">
+          <div class="audit-row"><div class="audit-dot" style="background:var(--teal)"></div><div class="audit-main"><div class="audit-action">Gate 1 APPROVED — Spec Validation</div><div class="audit-meta">Apr 17 · 09:42 · Product Manager · 4/4 checks passed · PRD v1.3</div></div><span class="tag ok" style="flex-shrink:0">G1 APPROVED</span></div>
+          <div class="audit-row"><div class="audit-dot" style="background:var(--blue)"></div><div class="audit-main"><div class="audit-action">Agent action — Implementation plan generated</div><div class="audit-meta">Apr 17 · 10:55 · AI agent · 3 sprints · 16 tasks · 0 arch decisions auto-resolved</div></div><span class="tag neutral" style="flex-shrink:0">AGENT</span></div>
+          <div class="audit-row" id="audit-g2" style="display:none"><div class="audit-dot" style="background:var(--teal)"></div><div class="audit-main"><div class="audit-action">Gate 2 APPROVED — Implementation Plan</div><div class="audit-meta">Apr 17 · 11:15 · Product Manager · 5/5 checks passed</div></div><span class="tag ok" style="flex-shrink:0">G2 APPROVED</span></div>
+          <div class="audit-row" id="audit-g3" style="display:none"><div class="audit-dot" style="background:var(--teal)"></div><div class="audit-main"><div class="audit-action">Gate 3 APPROVED — Draft MR promoted to review</div><div class="audit-meta">Apr 17 · 14:03 · Product Manager · @jake.kim assigned · MR #2841</div></div><span class="tag ok" style="flex-shrink:0">G3 APPROVED</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ AGENT VIEW ══ -->
+  <div class="view" id="v-agent">
+    <div class="bar">
+      <div class="bar-title">PM Assistant</div>
+      <span class="tag accent">Gate-aware context</span>
+    </div>
+    <div class="canvas" style="flex-direction:column;">
+      <div style="display:flex;gap:14px;flex:1;">
+        <div class="card" style="flex:1;display:flex;flex-direction:column;">
+          <div class="ch"><div style="width:7px;height:7px;border-radius:50%;background:var(--teal);" class="pulse"></div><h3>PM Agent — full context</h3><span id="agent-gate-status">G1 ✓ · G2 pending · G3 locked</span></div>
+          <div class="chat-msgs" id="chat-agent" style="max-height:460px;">
+            <div class="msg"><div class="av ai">AI</div><div class="bbl ai">Full gate context loaded. Gate 1 is approved, Gate 2 is pending your checklist, Gate 3 is locked until Gate 2 passes. Ask me to help evaluate the plan, draft change requests, or explain what to look for in a diff review.</div></div>
+          </div>
+          <div class="cin"><input id="in-agent" placeholder="Ask about gates, plan quality, pipeline..." onkeydown="if(event.key==='Enter')sendChat('agent')"/><button class="send" onclick="sendChat('agent')"><svg width="11" height="11" viewBox="0 0 16 16" fill="white"><path d="M1 8L15 1l-4 7 4 7z"/></svg></button></div>
+        </div>
+        <div class="lcol" style="width:230px;">
+          <div class="card">
+            <div class="ch"><h3>Gate-aware prompts</h3></div>
+            <div class="cb">
+              <button class="qa" onclick="agentP('What questions should I ask before approving the implementation plan at Gate 2? Be specific.')">Gate 2 review guide ↗</button>
+              <button class="qa" onclick="agentP('What are signs an engineer is rubber-stamping gate reviews? How do I prevent gate fatigue?')">Detect gate fatigue ↗</button>
+              <button class="qa" onclick="agentP('How do I write a change request that helps the AI agent revise its plan correctly?')">Write change request ↗</button>
+              <button class="qa" onclick="agentP('What should I look for in an AI-generated diff before promoting at Gate 3?')">Gate 3 diff review ↗</button>
+              <button class="qa" onclick="agentP('Our change failure rate is 4.2%. What should we do to bring it below 1%?')">Diagnose CFR 4.2% ↗</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="ch"><h3>Live workspace state</h3></div>
+            <div class="cb" style="display:flex;flex-direction:column;gap:7px;">
+              <div class="ctx-chip"><span class="ctx-key">Gate 1 · PRD</span><span class="tag ok" style="font-size:9px">APPROVED</span></div>
+              <div class="ctx-chip"><span class="ctx-key">Gate 2 · Plan</span><span class="tag warn" style="font-size:9px;" id="ctx-g2">PENDING</span></div>
+              <div class="ctx-chip"><span class="ctx-key">Gate 3 · MR</span><span class="tag lock" style="font-size:9px;" id="ctx-g3">LOCKED</span></div>
+              <div class="ctx-chip"><span class="ctx-key">Code in pipeline</span><span style="font-family:var(--mono);font-size:10px;color:var(--ink4)" id="ctx-code">NO</span></div>
+              <div class="ctx-chip"><span class="ctx-key">Sprint 12</span><span style="font-family:var(--mono);font-size:10px;color:var(--ink2)">61% complete</span></div>
+              <div class="ctx-chip"><span class="ctx-key">DORA overall</span><span class="tag ok" style="font-size:9px">ELITE</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /stage -->
+</div><!-- /shell -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const API='https://api.anthropic.com/v1/messages';
+
+// ── STATE ──
+let g2checks={a:false,b:false,c:false,d:false,e:false};
+let g3checks={a:false,b:false,c:false,d:false};
+let g2approved=false, g3approved=false;
+
+// ── NAV ──
+function sw(v){
+  document.querySelectorAll('.view').forEach(e=>{e.classList.remove('on');e.style.display='';});
+  const el=document.getElementById('v-'+v);
+  el.classList.add('on');
+  document.querySelectorAll('.rail-btn').forEach(e=>e.classList.remove('active'));
+  const nb=document.getElementById('nb-'+v);
+  if(nb)nb.classList.add('active');
+}
+
+function stab(el,id){
+  const p=el.closest('.card');
+  p.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  p.querySelectorAll('.da').forEach(a=>a.style.display='none');
+  const t=document.getElementById(id);if(t)t.style.display='block';
+}
+
+// ── TOAST ──
+function toast(msg,dur=3200){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.display='block';
+  clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',dur);
+}
+
+// ── GATE 2 CHECKS ──
+function ck2(k,row){
+  g2checks[k]=!g2checks[k];
+  const box=document.getElementById('ck2'+k);
+  const lbl=document.getElementById('cl2'+k);
+  box.classList.toggle('on',g2checks[k]);
+  if(lbl)lbl.classList.toggle('on',g2checks[k]);
+  const done=Object.values(g2checks).filter(Boolean).length;
+  const pct=done/5*100;
+  document.getElementById('g2-prog').style.width=pct+'%';
+  document.getElementById('g2-pct').textContent=done+' / 5 items checked';
+  document.getElementById('g2-count').textContent=done+' / 5';
+  const allDone=done===5;
+  const apBtn=document.getElementById('g2-approve-btn');
+  apBtn.disabled=!allDone; apBtn.style.opacity=allDone?'1':'0.4';
+  document.getElementById('btn-g2').disabled=!allDone;
+}
+
+// ── GATE 3 CHECKS ──
+function ck3(k){
+  g3checks[k]=!g3checks[k];
+  const box=document.getElementById('ck3'+k);
+  const lbl=box.closest('.ck-row').querySelector('.ck-label');
+  box.classList.toggle('on',g3checks[k]);
+  if(lbl)lbl.classList.toggle('on',g3checks[k]);
+  const done=Object.values(g3checks).filter(Boolean).length;
+  document.getElementById('g3-prog').style.width=(done/4*100)+'%';
+  document.getElementById('g3-pct').textContent=done+' / 4 items checked';
+}
+
+// ── MODALS ──
+function showMod(ico,title,body,footer){
+  document.getElementById('m-ico').textContent=ico;
+  document.getElementById('m-title').textContent=title;
+  document.getElementById('m-body').innerHTML=body;
+  document.getElementById('m-foot').innerHTML=footer;
+  document.getElementById('modal-bg').classList.add('on');
+}
+function closeMod(e){
+  if(e&&e.target!==document.getElementById('modal-bg'))return;
+  document.getElementById('modal-bg').classList.remove('on');
+}
+
+function openApproveMod(){
+  const done=Object.values(g2checks).filter(Boolean).length;
+  if(done<5){toast('Complete all 5 checklist items first.');return;}
+  showMod('✅','Approve Implementation Plan',
+    `<div class="m-field"><div class="m-label">Approver</div><input class="m-input" id="m-approver" value="Product Manager"/></div>
+    <div class="m-field"><div class="m-label">Approval notes (optional)</div><textarea class="m-input" id="m-notes" placeholder="Notes for the engineering team..."></textarea></div>
+    <div class="m-notice ok">⚠ This unlocks code generation and activates Gate 3. This action is logged and cannot be undone without a full pipeline restart.</div>`,
+    `<button class="cbtn" onclick="closeMod()">Cancel</button><button class="cbtn primary" onclick="doApproveG2()">Confirm Approval</button>`
+  );
+}
+
+function doApproveG2(){
+  g2approved=true;
+  closeMod();
+  // Gate 2 UI → approved
+  const g2=document.getElementById('gate2');
+  g2.className='gate ok';
+  document.getElementById('g2-ico').textContent='✅';
+  document.getElementById('g2-ico').className='gate-ico ok';
+  document.getElementById('g2-sub').textContent='APPROVED · Code generation unlocked · Apr 17 · 11:15';
+  document.getElementById('g2-sub').className='gate-sub ok';
+  document.getElementById('g2-dot').style.background='var(--teal)';
+  document.getElementById('g2-prog').style.background='var(--teal)';
+  document.getElementById('g2-prog').style.width='100%';
+  document.getElementById('g2-pct').textContent='✓ All 5 checks · APPROVED';
+  document.getElementById('g2-pct').style.color='var(--teal)';
+  document.getElementById('g2-chip').textContent='Gate 2 — APPROVED';
+  document.getElementById('g2-chip').className='tag ok';
+  document.getElementById('btn-g2').textContent='Plan Approved ✓';
+  document.getElementById('btn-g2').disabled=true;
+  // Sidebar
+  document.getElementById('gn-impl').textContent='✓';
+  document.getElementById('gn-impl').className='g-pip ok';
+  document.getElementById('gs2').textContent='APPROVED';
+  document.getElementById('gs2').className='gs-val ok';
+  document.getElementById('gs-code').textContent='GENERATING';
+  document.getElementById('gs-code').className='gs-val warn';
+  // Audit
+  document.getElementById('audit-g2').style.display='flex';
+  document.getElementById('audit-count').textContent='5 events';
+  // Update pipeline
+  updatePipelineG2();
+  // Unlock Gate 3
+  unlockG3();
+  // Agent chat
+  addMsg('chat-impl','ai','Gate 2 approved. Generating code on branch <strong>feat/pdf-export</strong> and opening draft MR. Gate 3 will hold the MR until you review the diff and promote it.');
+  document.getElementById('plan-status').textContent='APPROVED · code generating';
+  document.getElementById('ctx-g2').textContent='APPROVED';
+  document.getElementById('ctx-g2').className='tag ok';
+  document.getElementById('agent-gate-status').textContent='G1 ✓ · G2 ✓ · G3 pending';
+  toast('✅ Gate 2 approved — code generation started. Gate 3 now active.');
+}
+
+function unlockG3(){
+  document.getElementById('gn-sprint').textContent='!';
+  document.getElementById('gn-sprint').className='g-pip warn';
+  document.getElementById('gs3').textContent='PENDING';
+  document.getElementById('gs3').className='gs-val warn';
+  document.getElementById('g3-chip').textContent='Gate 3 — PENDING · Review draft MR';
+  document.getElementById('g3-chip').className='tag warn';
+  document.getElementById('g3-sub').textContent='⚠ PENDING · Draft MR ready — review diff before promoting';
+  document.getElementById('g3-sub').className='gate-sub warn';
+  document.getElementById('g3-ico').textContent='⚠️';
+  document.getElementById('g3-ico').className='gate-ico warn';
+  document.getElementById('gate3').className='gate active';
+  const body=document.getElementById('g3-body');
+  body.style.opacity='1'; body.style.pointerEvents='auto';
+  // Wire up gate 3 checkboxes
+  ['a','b','c','d'].forEach((k,i)=>{
+    const row=document.getElementById('ck3'+k).closest('.ck-row');
+    row.style.cursor='pointer';
+    row.onclick=()=>ck3(k);
+    if(k==='a'){ck3('a');}
+  });
+  document.getElementById('g3-promote-btn').disabled=false;
+  document.getElementById('btn-g3').disabled=false;
+}
+
+function openPromoteMod(){
+  showMod('🚀','Promote Draft MR to Review',
+    `<div style="padding:10px 12px;border-radius:var(--r);background:var(--accent2);border:1px solid rgba(200,90,42,.15);margin-bottom:14px;font-size:12px;">
+      <strong style="color:var(--ink)">feat/pdf-export · MR #2841</strong><br/>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--ink4)">AI-generated · 847 lines · 23 files · 41 unit tests · Gate 2 approved</span>
+    </div>
+    <div class="m-field"><div class="m-label">Assign reviewer</div><input class="m-input" id="m-reviewer" value="@jake.kim"/></div>
+    <div class="m-notice warn">Once promoted, this MR enters the standard review pipeline and is visible to all assigned reviewers. It will appear alongside human-authored MRs.</div>`,
+    `<button class="cbtn" onclick="closeMod()">Cancel</button><button class="cbtn primary" onclick="doPromoteG3()">Promote to Review</button>`
+  );
+}
+
+function doPromoteG3(){
+  g3approved=true;
+  closeMod();
+  document.getElementById('gn-sprint').textContent='✓';
+  document.getElementById('gn-sprint').className='g-pip ok';
+  document.getElementById('gn-dora').textContent='✓';
+  document.getElementById('gn-dora').className='g-pip ok';
+  document.getElementById('gs3').textContent='APPROVED';
+  document.getElementById('gs3').className='gs-val ok';
+  document.getElementById('gs-code').textContent='IN REVIEW';
+  document.getElementById('gs-code').className='gs-val ok';
+  document.getElementById('g3-chip').textContent='Gate 3 — APPROVED · MR in review';
+  document.getElementById('g3-chip').className='tag ok';
+  document.getElementById('gate3').className='gate ok';
+  document.getElementById('g3-sub').textContent='APPROVED · MR promoted · @jake.kim reviewing';
+  document.getElementById('g3-sub').className='gate-sub ok';
+  document.getElementById('g3-ico').textContent='✅';
+  document.getElementById('g3-ico').className='gate-ico ok';
+  document.getElementById('btn-g3').textContent='MR Promoted ✓';
+  document.getElementById('btn-g3').disabled=true;
+  document.getElementById('g3-prog').style.width='100%';
+  document.getElementById('g3-prog').style.background='var(--teal)';
+  document.getElementById('g3-pct').textContent='✓ All checks · APPROVED';
+  document.getElementById('g3-pct').style.color='var(--teal)';
+  // Unlock DORA
+  document.getElementById('dora-lock').style.display='none';
+  document.getElementById('dora-content').style.display='flex';
+  document.getElementById('dora-tag').textContent='Gate 3 — APPROVED · Live data';
+  document.getElementById('dora-tag').className='tag ok';
+  document.getElementById('dora-refresh').style.display='';
+  // Audit
+  document.getElementById('audit-g3').style.display='flex';
+  document.getElementById('audit-count').textContent='6 events';
+  // Ctx
+  document.getElementById('ctx-g3').textContent='APPROVED';
+  document.getElementById('ctx-g3').className='tag ok';
+  document.getElementById('ctx-code').textContent='IN REVIEW';
+  document.getElementById('ctx-code').style.color='var(--teal)';
+  document.getElementById('agent-gate-status').textContent='G1 ✓ · G2 ✓ · G3 ✓';
+  toast('🚀 MR promoted! @jake.kim assigned. DORA dashboard now live.');
+}
+
+function openChangesMod(){
+  showMod('📝','Request Changes',
+    `<div class="m-field"><div class="m-label">What needs to change?</div><textarea class="m-input" id="m-changes" placeholder="e.g. The dependency on lib/pdf-core v2.1 is wrong — we use v1.8 internally. Revise the plan and check for other external library assumptions..."></textarea></div>
+    <div class="m-field"><div class="m-label">Priority</div><select class="m-input"><option>🔴 Blocking — must fix before proceeding</option><option>🟡 Important — fix in next revision</option><option>🟢 Minor — can address in code review</option></select></div>`,
+    `<button class="cbtn" onclick="closeMod()">Cancel</button><button class="cbtn warn" onclick="submitChanges()">Submit Request</button>`
+  );
+}
+
+function submitChanges(){
+  closeMod();
+  toast('Change request submitted. Agent will revise the plan.');
+  addMsg('chat-impl','ai','Change request received. Revising the plan — I\'ll flag the corrected sections when ready for re-review. Checklist items will need to be re-confirmed.');
+}
+
+function openRejectMod(){
+  showMod('🛑','Reject & Halt Pipeline',
+    `<div class="m-notice danger" style="margin-bottom:14px;">⚠ This halts the entire pipeline. The agent cannot proceed. A full restart from PRD revision will be required.</div>
+    <div class="m-field"><div class="m-label">Reason for rejection</div><textarea class="m-input" id="m-reject" placeholder="Explain why this plan cannot proceed..."></textarea></div>`,
+    `<button class="cbtn" onclick="closeMod()">Cancel</button><button class="cbtn danger" onclick="doReject()">Confirm Halt</button>`
+  );
+}
+
+function doReject(){
+  closeMod();
+  toast('🛑 Pipeline halted. Return to PRD to revise and restart.');
+  addMsg('chat-impl','ai','Pipeline halted as requested. No code generated. Please revise the PRD spec and restart the Gate 1 validation process when ready.');
+}
+
+function updatePipelineG2(){
+  document.getElementById('pipe-flow').innerHTML=`
+    <div class="pf-stage"><div class="pf-node done">✓</div><div class="pf-label done">PRD</div></div>
+    <div class="pf-arrow done"></div>
+    <div class="pf-stage"><div class="pf-node done">✓</div><div class="pf-label done">GATE·1</div></div>
+    <div class="pf-arrow done"></div>
+    <div class="pf-stage"><div class="pf-node done">✓</div><div class="pf-label done">PLAN</div></div>
+    <div class="pf-arrow done"></div>
+    <div class="pf-stage"><div class="pf-node pass">✓</div><div class="pf-label pass">GATE·2</div></div>
+    <div class="pf-arrow active"></div>
+    <div class="pf-stage"><div class="pf-node active">⚙</div><div class="pf-label active">CODE</div></div>
+    <div class="pf-arrow lock"></div>
+    <div class="pf-stage"><div class="pf-node lock" style="border-color:var(--gold);color:var(--gold)">⚠</div><div class="pf-label" style="color:var(--gold)">GATE·3</div></div>
+    <div class="pf-arrow lock"></div>
+    <div class="pf-stage"><div class="pf-node lock">🔒</div><div class="pf-label">REVIEW</div></div>`;
+  document.getElementById('flow-txt').textContent='Gate 2 approved · Code generating';
+}
+
+// ── AI CALLS ──
+const S_PRD='You are a senior PM. Output only clean HTML using h4, p, ul, li tags. No markdown. No preamble. No code fences. Be concise and practical.';
+const S_IMPL='You are a senior engineering lead. Output clean HTML (h4, p, ul, li, strong). Flag all architectural decisions with [ARCH DECISION REQUIRED]. No markdown. Be specific with task names, owners, and story points.';
+const S_AGENT='You are a senior PM assistant. Context: PDF Export feature. 3 human gates: Gate 1 (spec) approved, Gate 2 (impl plan) pending 5-item checklist, Gate 3 (draft MR) locked. DORA: deploy freq 4.2/day elite, lead time 1.8h elite, CFR 4.2% medium, MTTR 23m elite. Sprint 12: 18 tasks, 11 done, 3 overdue. Be direct, actionable, under 180 words. Use p, ul, li, strong HTML.';
+
+async function callAI(sys,usr){
+  const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:900,system:sys,messages:[{role:'user',content:usr}]})});
+  const d=await r.json();
+  if(d.error)throw new Error(d.error.message);
+  return d.content?.[0]?.text||'No response.';
+}
+
+function addMsg(chatId,role,html){
+  const c=document.getElementById(chatId);
+  const d=document.createElement('div');
+  d.className='msg'+(role==='u'?' u':'');
+  d.innerHTML=`<div class="av ${role==='u'?'u':'ai'}">${role==='u'?'PM':'AI'}</div><div class="bbl ${role==='u'?'u':'ai'}">${html}</div>`;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function addTyping(chatId){
+  const c=document.getElementById(chatId);const d=document.createElement('div');d.className='msg';d.id='ty-'+chatId;
+  d.innerHTML=`<div class="av ai">AI</div><div class="bbl ai" style="display:flex;gap:4px;padding:9px 11px"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  c.appendChild(d);c.scrollTop=c.scrollHeight;
+}
+function rmTyping(chatId){const e=document.getElementById('ty-'+chatId);if(e)e.remove();}
+
+async function sendChat(type){
+  const map={prd:['in-prd','chat-prd',S_PRD],impl:['in-impl','chat-impl',S_IMPL],agent:['in-agent','chat-agent',S_AGENT]};
+  const[inId,chatId,sys]=map[type];
+  const inp=document.getElementById(inId);const msg=inp.value.trim();if(!msg)return;
+  inp.value='';addMsg(chatId,'u',msg);addTyping(chatId);
+  try{const r=await callAI(sys,msg);rmTyping(chatId);addMsg(chatId,'ai',r.replace(/\n/g,'<br>'));}
+  catch(e){rmTyping(chatId);addMsg(chatId,'ai','Connection error — please try again.');}
+}
+
+async function genPRD(){
+  toast('Generating PRD...');
+  const title=document.getElementById('prd-title').value||'Feature';
+  try{
+    const[req,us,mx]=await Promise.all([
+      callAI(S_PRD,`Write functional and non-functional requirements for: ${title}. Must-have vs nice-to-have. h4 headings.`),
+      callAI(S_PRD,`Write 5 user stories for: ${title}. Format: As a [persona], I want [action] so that [benefit]. Group by persona. h4 headings.`),
+      callAI(S_PRD,`Define 5 measurable KPIs for: ${title}. Include adoption, technical, and business metrics. h4 headings.`)
+    ]);
+    document.getElementById('b-req').innerHTML=req;
+    document.getElementById('b-us').innerHTML=us;
+    document.getElementById('b-mx').innerHTML=mx;
+    toast('PRD updated across all 4 tabs.');
+  }catch(e){toast('Error: '+e.message);}
+}
+
+async function qa(type){
+  const prompts={
+    stories:`Write 6 user stories for PDF Export, grouped by 3 personas. HTML only (h4, ul, li).`,
+    metrics:`Define 6 KPIs for PDF Export: adoption rate, export success rate, p95 latency, error rate, DAU, revenue. HTML (h4, ul, li).`,
+    risks:`List 5 key launch risks for PDF Export with likelihood, impact, and mitigation. HTML (h4, ul, li).`,
+    timeline:`Create a 6-week milestone timeline for PDF Export launch. HTML (h4, ul, li).`
+  };
+  toast('Generating...');
+  try{
+    const r=await callAI(S_PRD,prompts[type]);
+    const map={stories:'b-us',metrics:'b-mx',risks:'b-ov',timeline:'b-ov'};
+    document.getElementById(map[type]).innerHTML=r;
+    toast('Done — check the relevant tab.');
+  }catch(e){toast('Error: '+e.message);}
+}
+
+async function genImpl(){
+  toast('AI generating implementation plan...');
+  document.getElementById('plan-status').textContent='Generating...';
+  try{
+    const r=await callAI(S_IMPL,
+      'Generate a 3-sprint implementation plan for PDF Export for enterprise. Each sprint: goal, 4-5 tasks with owner (Jake Kim=backend, Rosa Lin=frontend, Alex Morgan=DevOps), story points 1-8, dependencies. Flag architectural decisions with [ARCH DECISION REQUIRED]. Use h4 for sprint headers, ul/li with <strong>owner</strong> and points for tasks.');
+    document.getElementById('plan-body').innerHTML=r;
+    document.getElementById('plan-status').textContent='AI-generated · review Gate 2 checklist';
+    document.getElementById('btn-g2').disabled=false;
+    addMsg('chat-impl','ai','Plan generated. Review all 5 Gate 2 checklist items — check each one after verifying that section. The Approve button unlocks when all 5 are checked.');
+    toast('Plan ready — complete the Gate 2 checklist.');
+  }catch(e){toast('Error: '+e.message);}
+}
+
+function goImpl(){sw('impl');}
+
+function autoRemind(){
+  const panel=document.getElementById('remind-panel');
+  const log=document.getElementById('remind-log');
+  panel.style.display='block';log.innerHTML='';
+  [{n:'Rosa Lin',t:'design mocks — overdue'},{n:'Alex Morgan',t:'PDF template schema'},{n:'Jake Kim',t:'unit tests update'}].forEach((m,i)=>{
+    setTimeout(()=>{
+      const d=document.createElement('div');
+      d.style.cssText='padding:7px 9px;border-radius:var(--r);border:1px solid var(--paper3);font-size:11px;';
+      d.innerHTML=`<div style="font-weight:500;color:var(--ink);margin-bottom:1px;">${m.n}</div><div style="color:var(--ink4);">${m.t}</div>`;
+      log.appendChild(d);
+    },i*400);
+  });
+  setTimeout(()=>toast('3 reminders sent to team members.'),1200);
+}
+
+function agentP(txt){sw('agent');document.getElementById('in-agent').value=txt;sendChat('agent');}
+</script>
+</body>
+</html>
