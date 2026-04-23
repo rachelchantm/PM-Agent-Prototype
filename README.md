@@ -61,6 +61,7 @@ The answer implemented here is **Gated Autopilot** — automation runs ahead, hu
 - Full gate audit trail displayed alongside pipeline data
 
 - <img width="1440" height="1400" alt="image" src="https://github.com/user-attachments/assets/3d77167b-13e1-4e00-8bc3-ea2edfc2220a" />
+<img width="1440" height="1400" alt="image" src="https://github.com/user-attachments/assets/f0c80690-a7a4-4843-8a38-76d3cfe11139" />
 
 
 ### 5. Audit Log
