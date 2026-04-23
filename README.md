@@ -60,6 +60,9 @@ The answer implemented here is **Gated Autopilot** — automation runs ahead, hu
 - CI/CD pipeline stage view (Build → Test → SAST → Staging → Deploy) with pass/fail per run
 - Full gate audit trail displayed alongside pipeline data
 
+- <img width="1440" height="1400" alt="image" src="https://github.com/user-attachments/assets/3d77167b-13e1-4e00-8bc3-ea2edfc2220a" />
+
+
 ### 5. Audit Log
 - Persistent log of every gate decision, agent action, and timestamp
 - Records: approver name, checks completed, notes, and downstream effects
