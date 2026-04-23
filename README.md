@@ -60,8 +60,8 @@ The answer implemented here is **Gated Autopilot** — automation runs ahead, hu
 - CI/CD pipeline stage view (Build → Test → SAST → Staging → Deploy) with pass/fail per run
 - Full gate audit trail displayed alongside pipeline data
 
-- <img width="1440" height="1400" alt="image" src="https://github.com/user-attachments/assets/3d77167b-13e1-4e00-8bc3-ea2edfc2220a" />
-<img width="723" height="707" alt="Screenshot 2026-04-22 at 10 22 43 PM" src="https://github.com/user-attachments/assets/828585c2-f951-4a41-b611-e3b9121e06f6" />
+<img width="1440" height="1400" alt="image" src="https://github.com/user-attachments/assets/6b91efd0-fb74-4cb1-8202-8863faa14a38" />
+
 
 
 
